@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anniversary Sanctuary - Login</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-box {
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+        .login-box h1 {
+            color: var(--primary-pink);
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+        .login-box p {
+            color: var(--accent-grey);
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+        .error-msg {
+            color: #ff5252;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+        .timer-msg {
+            color: #ffb142;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="login-box card content-layer">
+        <h1>🐾 3 Years Anniversary 🐾</h1>
+        <p>Prove it's you! Answer our special memories correctly to enter.</p>
+
+        <div id="login-form-container">
+            <label style="text-align: left; display: block; font-size: 0.85rem; color: var(--accent-grey); margin-bottom: 5px;">1. Our Anniversary Date:</label>
+            <input type="date" id="anniversary-date">
+
+            <label style="text-align: left; display: block; font-size: 0.85rem; color: var(--accent-grey); margin-bottom: 5px;">2. Her Favorite Color:</label>
+            <select id="fav-color">
+                <option value="">-- Choose a Color --</option>
+                <option value="pink">Pink</option>
+                <option value="blue">Blue</option>
+                <option value="brown">Brown</option>
+                <option value="grey">Grey</option>
+                <option value="purple">Purple</option>
+            </select>
+
+            <button class="btn" onclick="verifyLogin()" style="width: 100%; margin-top: 10px;">Enter Sanctuary</button>
+            <div id="error-display" class="error-msg"></div>
+        </div>
+        <div id="lockout-display" class="timer-msg" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Check lockout status on load
+        function checkLockout() {
+            const lockoutTime = localStorage.getItem('lockout_until');
+            if (lockoutTime) {
+                const remaining = lockoutTime - Date.now();
+                if (remaining > 0) {
+                    lockUI(Math.ceil(remaining / 1000));
+                    return true;
+                } else {
+                    localStorage.removeItem('lockout_until');
+                    localStorage.setItem('fail_count', '0');
+                }
+            }
+            return false;
+        }
+
+        function lockUI(seconds) {
+            document.getElementById('login-form-container').style.display = 'none';
+            const display = document.getElementById('lockout-display');
+            display.style.display = 'block';
+            
+            const interval = setInterval(() => {
+                seconds--;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                display.innerText = `Too many failed attempts! Locked out for: ${mins}m ${secs}s`;
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    localStorage.removeItem('lockout_until');
+                    localStorage.setItem('fail_count', '0');
+                    display.style.display = 'none';
+                    document.getElementById('login-form-container').style.display = 'block';
+                }
+            }, 1000);
+        }
+
+        function verifyLogin() {
+            if (checkLockout()) return;
+
+            const dateInput = document.getElementById('anniversary-date').value;
+            const colorInput = document.getElementById('fav-color').value;
+            const errorDisplay = document.getElementById('error-display');
+
+            // Correct answers: Date = 2023-08-30, Color = brown
+            if (dateInput === '2023-08-30' && colorInput === 'brown') {
+                localStorage.setItem('auth_success', 'true');
+                window.location.href = 'home.html';
+            } else {
+                let fails = parseInt(localStorage.getItem('fail_count') || '0') + 1;
+                localStorage.setItem('fail_count', fails);
+
+                if (fails >= 3) {
+                    const lockoutDuration = 30 * 60 * 1000; // 30 minutes
+                    localStorage.setItem('lockout_until', Date.now() + lockoutDuration);
+                    lockUI(30 * 60);
+                } else {
+                    errorDisplay.innerText = `Incorrect answers! Attempts left: ${3 - fails}`;
+                }
+            }
+        }
+
+        checkLockout();
+
+        
+    </script>
+</body>
+</html>

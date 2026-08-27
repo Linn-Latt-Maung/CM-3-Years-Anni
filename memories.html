@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3 Years Anniversary - Memories</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .memories-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .memories-title {
+            color: var(--primary-pink, #ff6b8b);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .memories-subtitle {
+            color: var(--accent-grey, #666);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            justify-content: center;
+            align-items: center;
+        }
+        .memory-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(255, 107, 139, 0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            aspect-ratio: 9 / 16; /* Full 9:16 vertical format */
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transform: none !important;
+        }
+        .memory-card:hover {
+            transform: translateY(-5px) !important;
+            box-shadow: 0 12px 30px rgba(255, 107, 139, 0.25);
+        }
+        .memory-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Fills the entire 9:16 card completely */
+            display: block;
+        }
+        .memory-overlay-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 25px 15px 15px 15px;
+            background: linear-gradient(to top, #ff6b8b, transparent);
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 1rem;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Book Letter Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .book-letter {
+            background: #fffdf9;
+            background-image: linear-gradient(to right, rgba(255, 240, 243, 0.4), #fffdf9);
+            border: 2px solid #ffb6c1;
+            border-radius: 16px;
+            width: 85%;
+            max-width: 550px;
+            padding: 35px;
+            box-shadow: 0 15px 35px rgba(255, 107, 139, 0.3);
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: left;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-overlay.active .book-letter {
+            transform: scale(1);
+        }
+        .book-letter h3 {
+            color: #ff6b8b;
+            margin-bottom: 15px;
+            font-size: 1.6rem;
+            border-bottom: 2px dashed #ffb6c1;
+            padding-bottom: 10px;
+        }
+        .book-content {
+            font-size: 1.05rem;
+            color: #444;
+            line-height: 1.7;
+            white-space: pre-line;
+            font-family: 'Georgia', serif;
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: #ff6b8b;
+            color: white;
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 8px rgba(255, 117, 140, 0.3);
+            transition: background 0.2s;
+        }
+        .close-btn:hover {
+            background: #ff5270;
+        }
+
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+        }
+        @media (max-width: 480px) {
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        if (!localStorage.getItem('auth_success')) window.location.href = 'index.html';
+    </script>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="content-layer">
+        <nav class="navbar">
+            <div class="nav-brand">🐾 3 Years Together</div>
+<button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">
+    ☰
+  </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="home.html">Home</a></li>
+                <!-- <li><a href="speech.html">Anniversary Speech</a></li> -->
+                <li><a href="memories.html" class="active">Memories</a></li>
+                <li><a href="game.html">Game</a></li>
+                <li><a href="likes.html">Things I Loves</a></li>
+                <li><a href="guess.html">Guess Game</a></li>
+            </ul>
+        </nav>
+
+        <div class="memories-container">
+            <h1 class="memories-title">Our Precious Memories 📸💖</h1>
+            <p class="memories-subtitle">Click on any photo to open its special letter and read the story behind it.</p>
+
+            <div class="gallery-grid" id="gallery-grid"></div>
+        </div>
+    </div>
+
+    <!-- Book Letter Modal Overlay -->
+    <div class="modal-overlay" id="letter-modal" onclick="closeLetterOnOutside(event)">
+        <div class="book-letter">
+            <button class="close-btn" onclick="closeLetter()">×</button>
+            <h3 id="modal-title"></h3>
+            <div class="book-content" id="modal-text"></div>
+        </div>
+    </div>
+
+    <script>
+                // Memory Data with corresponding letter messages
+        const memoriesData = [
+            {
+                img: "./img/10.jpg",
+                title: "Our Beginning 💖",
+                text: "😁😁ရပ်ကွက်ထဲ မီးထွန်းထားတာလေးလိုက်ကြည့်တုန်းကပေါ့😘😘"
+            },
+            {
+                img: "./img/9.jpg",
+                title: "Favorite Hangout Spot ✨",
+                text: "Herry Barမှာ ပထမဆုံးစထိုင်ခဲ့တဲ့နေ့လေး😁😁အရမ်းစျေးကြီးပေမဲ့ တစ်ခွက်နှစ်ခွက်သောက်ပီးတော့ တလမ်းလုံး အိမ်အပြန် လမ်းမှာ ဖူးကို ထိန်းခဲ့ရတာလေ စိတ်မရှည်တော့လို့ ဖူးကို ဂုတ်ကနေကို ဆွဲပီး လိုက်ထိန်းခဲ့ရတဲ့အမှတ်တရနေ့လေး😁🤪😗"
+            },
+            {
+                img: "./img/8.jpg",
+                title: "Late-Night Talks 🌙",
+                text: "သီတင်းကျွတ်မှာ မွေးတဲ့ကောင်မလေးမို့ ပွဲခင်းထဲလျောက်သွားရတာ ငယ်ငယ်လေးကထဲက အရမ်းသဘောကျခဲ့တာ သူ အလုပ်ကအပြန် မနားပဲ ပင်ပန်းနေတာတောင် ပွဲခင်းထဲမှာ တူတူ အချိန်ပေးပီး လျောက်လည်ခဲ့ကြတာ အမှတ်တရပါပဲ ကိုရေ😘😘"
+            },
+            {
+                img: "./img/7.jpg",
+                title: "Sweet Surprises 🌷",
+                text: "အသားမဲမဲနဲ့ ရုပ်ဆိုးဆိုး ကောင်မလေးတယောက် အမြဲ နေမကောင်းဖြစ်နေတဲ့ကောင်မလေးတယောက်ကို အများကြီး ခုထက် ပိုချစ်ပေးပါ စိတ်ချမ်းသာအောင်ထားပေးတဲ့အတွက်လဲကျေးဇူးတင်ပါတယ့တခါတလေ အဆင်မပြေမှုတွေ နားလည်ပေးခဲ့ရတာတွေ ရန်ဖြစ်ခဲ့ရတာတွေရှိပေမဲ့ ဖူးလက်ကို ခုချိန်အထိ မလွှတ်ပဲ ဆက်ဆွဲထားပေးခဲ့တဲ့အတွက်ကျေးဇူးတင်ပါတယ်နော် ဖူးလဲ ကို့ကို ချစ်တယ်နော့ ကိုလဲ ဖူးကိုချစ််တယ်ဆိုတာ ယုံကြည်ပါတယ် အချစ်ရေ😘😘"
+            },
+            {
+                img: "./img/6.jpg",
+                title: "Adventures Together 🌍",
+                text: "ပျော်လား မပျော်လားဆိုတာ အဲ့မှာသာ ကြည့်လိုက်တော့ 😁😁😂"
+            },
+            {
+                img: "./img/5.jpg",
+                title: "Cozy Days In 🐾",
+                text: "အမြဲ ကျန်းမာရေးမကောင်းပဲ အမြဲချူချာနေတဲ့ ဖူးကို ဘယ်အချိန်မဆို မငြိုငြ င်ပဲအနားမှာ ပြုစုပီး နေပေးတဲ့အတွက်ရော ကျေးဇူးအများကြီးတင်ပါတယ် အချစ်ရေ ဒါလေးက တည့်နေတဲ့အချိန်လေးဆိုတော့ နည်းနည်းလေးချွဲပါရစေနော် 🥰😘😘😉😉"
+            },
+            {
+                img: "./img/4.jpg",
+                title: "Unforgettable Smiles 😊",
+                text: "ပြန်ရတော့မယ်ဆိုပီးတော့ မပြန်ခင်လေး ကန်ဘောင်မှာ သွားထိုင်ခဲ့ကြတာလေ နားလည်မှုတွေ အလျော့ပေးမှုတွေ ရန်ဖြစ်လိုက် ပြန်တည့်လိုက်နဲ့  အနေနီးလာတော့ တဖြည်းဖြည်းနဲ့ စိတ်ချင်းပိုနီးကပ်လာတဲ့အချိန်လေးတွေပေါ့😉😘"
+            },
+            {
+                img: "./img/3.jpg",
+                title: "Celebrating Us 🎉",
+                text: "ကလပ်တွေလဲ တူတူသွားခဲ့ကြတယ် ကဲလဲ ကဲခဲ့သလို ဒါပေမဲ့ ကိုပါနေတော့ ဘာမှမကြောက်ခဲ့ဘူး ဘာမှမဖြစ်အောင် ကာကွယ်ပေးမယ်ဆိုတာကို ယုံတယ်လေ😘😉"
+            },
+            {
+                img: "./img/2.jpg",
+                title: "Endless Laughter 😂",
+                text: "Ygnကိုရောက်ပီး ဒုတိယအကြိမ် ဘုရားသွားခဲ့တဲ့အမှတ်တရလေးပေါ့ အချစ်ရေ ဖူးလုပ်ချင်တဲ့အရာမှန်သမျှကို ဘာမှမပိတ်ပင်ပဲ ခုချိန်ထိ နားလည်ပေးတဲ့အတွက်လဲကျေးဇူးပါ အချစ်ရေ😘😘"
+            },
+            {
+                img: "./img/1.jpg",
+                title: "Three Years Strong 💕",
+                text: "Relationship 3နှစ်တာ ကာလမှာ တစ်နှစ်ခွဲလောက်က LDRSဘဝနဲ့ ဖြတ်သန်းခဲ့ရတယ် အခုပုံလေးထဲကလိုပဲ အရမ်းလွမ်းနေရင်တောင် ပြေးတွေ့ခွင့်မရှိတဲ့ဘဝနဲ့ အဝေးမှာ နေခဲ့ကြရတယ် btw ဘယ်အချိန်မဆို တယောက်ရဲ့scheduleတွေကို တယောက်က သိရတဲ့အထိ စိတ်လုံခြုံမှုရော ပျော်ရွှင်မှုရော ရခဲ့ပါတယ် ပြန်တွေ့ရမဲ့ရက်ကို လက်ချိုးရေတွက်ရင်းနဲ့စောင့်ခဲ့ရတဲ့အချိန်လေးတွေပေါ့😉😉"
+            }
+        ];
+
+        const gridElement = document.getElementById('gallery-grid');
+        memoriesData.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'memory-card';
+            card.innerHTML = `
+                <img src="${item.img}" alt="${item.title}">
+                <div class="memory-overlay-caption">${item.title}</div>
+            `;
+            card.addEventListener('click', () => openLetter(index));
+            gridElement.appendChild(card);
+        });
+
+        const modal = document.getElementById('letter-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalText = document.getElementById('modal-text');
+
+        function openLetter(index) {
+            const memory = memoriesData[index];
+            modalTitle.textContent = memory.title;
+            modalText.textContent = memory.text;
+            modal.classList.add('active');
+        }
+
+        function closeLetter() {
+            modal.classList.remove('active');
+        }
+
+        function closeLetterOnOutside(event) {
+            if (event.target === modal) {
+                closeLetter();
+            }
+        }
+
+        // Paw background animation script
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('bg-canvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class PawParticle {
+                constructor() {
+                    this.reset();
+                }
+                
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = canvas.height + 50;
+                    this.size = Math.random() * 14 + 18;
+                    this.speedY = Math.random() * 0.7 + 0.3;
+                    this.speedX = (Math.random() - 0.5) * 0.4;
+                    this.alpha = Math.random() * 0.45 + 0.3;
+                    this.rotation = (Math.random() - 0.5) * 0.5;
+                    this.rotSpeed = (Math.random() - 0.5) * 0.008;
+                }
+
+                update() {
+                    this.y -= this.speedY;
+                    this.x += this.speedX + Math.sin(this.y * 0.015) * 0.3;
+                    this.rotation += this.rotSpeed;
+                    
+                    if (this.y < -50) {
+                        this.reset();
+                        this.y = canvas.height + 50;
+                    }
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.rotation);
+                    ctx.globalAlpha = this.alpha;
+                    
+                    ctx.fillStyle = '#ff6b8b'; 
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.lineWidth = 1.5;
+
+                    ctx.beginPath();
+                    ctx.ellipse(0, this.size * 0.25, this.size * 0.32, this.size * 0.25, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    const toeRadius = this.size * 0.12;
+                    const toePositions = [
+                        { x: -this.size * 0.33, y: -this.size * 0.10 },
+                        { x: -this.size * 0.11, y: -this.size * 0.26 },
+                        { x: this.size * 0.11, y: -this.size * 0.26 },
+                        { x: this.size * 0.33, y: -this.size * 0.10 }
+                    ];
+
+                    toePositions.forEach(pos => {
+                        ctx.beginPath();
+                        ctx.arc(pos.x, pos.y, toeRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    });
+
+                    ctx.restore();
+                }
+            }
+
+            const paws = Array.from({ length: 20 }, () => new PawParticle());
+
+            function animatePaws() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                paws.forEach(paw => {
+                    paw.update();
+                    paw.draw();
+                });
+                requestAnimationFrame(animatePaws);
+            }
+            
+            animatePaws();
+        });
+    </script>
+        <script>
+const menuToggle = document.getElementById('menuToggle');
+const navLinks = document.getElementById('navLinks');
+
+// Only run this code if both elements actually exist on the current page
+if (menuToggle && navLinks) {
+  // Toggle the mobile menu on click
+  menuToggle.addEventListener('click', () => {
+    navLinks.classList.toggle('active');
+  });
+
+  // Automatically close the menu when a link is clicked on mobile
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => {
+      navLinks.classList.remove('active');
+    });
+  });
+}
+    </script>
+</body>
+</html>

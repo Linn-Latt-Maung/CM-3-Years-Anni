@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anniversary Letter</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        #fireworks-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .envelope-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+            text-align: center;
+            position: relative;
+            z-index: 5;
+            transition: opacity 0.5s ease;
+        }
+
+        .envelope-title {
+            font-size: 1.8rem;
+            color: var(--primary-pink);
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .envelope-container {
+            width: 340px;
+            height: 220px;
+            background: #ff758c;
+            border-radius: 8px;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 15px 35px rgba(255, 117, 140, 0.25);
+            transition: transform 0.3s ease;
+        }
+
+        .envelope-container:hover {
+            transform: scale(1.02);
+        }
+
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 170px solid transparent;
+            border-right: 170px solid transparent;
+            border-top: 120px solid #e65275; 
+            transform-origin: top;
+            transition: transform 0.6s ease;
+            z-index: 3;
+        }
+
+        .envelope-pocket {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 170px solid #ff758c;
+            border-right: 170px solid #ff758c;
+            border-bottom: 110px solid #ff5c8a;
+            border-radius: 0 0 8px 8px;
+            z-index: 2;
+        }
+
+        .wax-seal {
+            position: absolute;
+            top: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #ff8fab 0%, #ff5c8a 100%);
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            z-index: 4;
+            border: 2px solid #ffffff;
+            transition: opacity 0.3s;
+        }
+
+        .letter-preview {
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            right: 20px;
+            height: 180px;
+            background: #ffffff;
+            color: #333;
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .envelope-instruction {
+            margin-top: 20px;
+            color: var(--accent-grey);
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .open .envelope-flap {
+            transform: rotateX(180deg);
+            z-index: 0;
+        }
+
+        .open .letter-preview {
+            transform: translateY(-110px);
+            z-index: 4;
+            cursor: pointer;
+        }
+
+        .open .wax-seal {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #speech-main-view {
+            display: none;
+            opacity: 0;
+            transition: opacity 1s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .speech-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 700px;
+            margin: 40px auto;
+            box-shadow: 0 10px 30px rgba(255, 92, 138, 0.12);
+            line-height: 1.8;
+            color: var(--text-dark);
+            text-align: center;
+        }
+
+        .speech-card h2 {
+            color: var(--primary-pink);
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .speech-card p {
+            margin-bottom: 15px;
+            font-size: 1.05rem;
+            color: #555560;
+        }
+    </style>
+</head>
+<body>
+    <script>if (!localStorage.getItem('auth_success')) window.location.href = 'index.html';</script>
+    <canvas id="fireworks-canvas"></canvas>
+
+    <div id="envelope-screen" class="envelope-wrapper">
+        <div class="envelope-title">A Letter For You!</div>
+        
+        <div id="envelope" class="envelope-container" onclick="openEnvelope()">
+            <div class="envelope-flap"></div>
+            <div class="wax-seal">🎀</div>
+            <div class="envelope-pocket"></div>
+            <div id="letter" class="letter-preview" onclick="revealSpeech(event)">
+                <h3 style="color: var(--primary-pink); font-family: cursive; margin-bottom: 5px;">My Love,</h3>
+                <p style="font-size: 0.85rem; color: #777;">Happy 3rd Anniversary! Click here to read our special letter...</p>
+            </div>
+        </div>
+
+        <div id="instruction" class="envelope-instruction">(tap on the envelope to open)</div>
+    </div>
+
+    <div id="speech-main-view" class="content-layer">
+        <nav class="navbar">
+            <div class="nav-brand">🐾 3 Years Together</div>
+            <button class="menu-toggle" id="mobile-menu-btn" aria-label="Toggle navigation">☰</button>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="home.html">Home</a></li>
+                <!-- <li><a href="speech.html" class="active">Anniversary Speech</a></li> -->
+                <li><a href="memories.html">Memories</a></li>
+                <li><a href="game.html">Game</a></li>
+                <li><a href="likes.html">Things He Likes</a></li>
+                <li><a href="guess.html">Guess Game</a></li>
+            </ul>
+        </nav>
+
+        <div class="container">
+            <div class="speech-card">
+                <h2>To My Dearest Love, Happy 3rd Anniversary 🎆</h2>
+                <p>အခု 3နှစ်ပြည့်တဲ့ Anniversary ကနေ နောက်ထပ် နှစ်တွေအများကြီး တူတူဖြတ်သန်းချင်ပါတယ်
+ပင်ပန့းလာတဲ့အချိန်တိုင်း တယောက်ပုခုံးပေါ် တယောက်မှီပီးတော့ တူတူ ရင်ဆိုင်ဖြတ်သန်းချင်ပါတယ်
+စိတ်ခံစားချက်တွေကို ပိုသိပီး ပိုနားလည်အောင်ကြိုးစားပီး တူတူရှေ့ဆက်ကြမယ်နော် ချစ်ဆုံးရေ
+စတွေ့ကထဲကနေ ဖူးအတွက်ပဲ အမြဲ အရင်ဦးစားပေးပီး လုပ်ပေးခဲ့တဲ့အတွက်လဲကျေးဇူးတင်ပါတယ်
+Ygnရောက်တဲ့အချိန်မှာလဲ အစစအရာရာ ဘာမှ စိတ်ပူစရာမလိုအောင် ကာကွယ်စောင့်ရှောက်ပေးခဲ့တဲ့အတွက်ရောပါ အချစ်ရေ အများကြီးချစ်တယ်နော်🤝🤝😘😘😘</p>
+                <p>အရမ်းငြိမ်တဲ့ Introvert ဖြစ်တဲ့ ကိုနဲ့ အရမ်း Activeဖြစ်တဲ့ Extrovert ဖြစ်တဲ့ ဖူးနဲ့ Type လဲ မတူ ​အကျင့်လဲမတူ အတွေးတွေလဲသိပ်မတူခဲ့ပေမဲ့ နားလည်မှု လေးစားမှုတွေနဲ့ အကောင်းဆုံး ကြိုးစားပီး ဖြတ်သန်းခဲ့တာ 3နှစ်ပြည့်သွားပီနော် ခုထက်လဲ နောက်ထပ် Anniတွေကို အတူတူ ဖြတ်သန်းချင်ပါတယ် ကိုရေ💛💛💞💞</p>
+                <p>Thank you for being my safe space, my favorite person to talk to, and the one who understands me best. Here's to 3 years of wonderful memories, and a lifetime more to come.</p>
+                <p style="color: var(--primary-pink); font-weight: 600; margin-top: 25px;">Forever yours 🐾💖</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const navLinks = document.getElementById('nav-links');
+            if (menuBtn && navLinks) {
+                menuBtn.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                });
+                navLinks.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        navLinks.classList.remove('active');
+                    });
+                });
+            }
+        });
+
+        let isOpened = false;
+
+        function openEnvelope() {
+            if (isOpened) return;
+            isOpened = true;
+            document.getElementById('envelope').classList.add('open');
+            document.getElementById('instruction').innerText = "(click on the letter to read it!)";
+        }
+
+        function revealSpeech(event) {
+            event.stopPropagation();
+            const envScreen = document.getElementById('envelope-screen');
+            envScreen.style.opacity = '0';
+            setTimeout(() => {
+                envScreen.style.display = 'none';
+                const mainView = document.getElementById('speech-main-view');
+                mainView.style.display = 'block';
+                setTimeout(() => { mainView.style.opacity = '1'; }, 50);
+            }, 500);
+        }
+
+        const canvas = document.getElementById('fireworks-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Firework {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height;
+                this.targetY = Math.random() * (canvas.height / 2);
+                this.speed = 5;
+                this.particles = [];
+                this.exploded = false;
+            }
+            update() {
+                if (!this.exploded) {
+                    this.y -= this.speed;
+                    if (this.y <= this.targetY) {
+                        this.exploded = true;
+                        for (let i = 0; i < 40; i++) {
+                            this.particles.push({
+                                x: this.x, y: this.y,
+                                angle: Math.random() * Math.PI * 2,
+                                speed: Math.random() * 4 + 1,
+                                alpha: 1,
+                                color: ['#ff5c8a', '#ff8fab', '#ffb3c6', '#7a7a8c'][Math.floor(Math.random()*4)]
+                            });
+                        }
+                    }
+                } else {
+                    this.particles.forEach(p => {
+                        p.x += Math.cos(p.angle) * p.speed;
+                        p.y += Math.sin(p.angle) * p.speed;
+                        p.alpha -= 0.02;
+                    });
+                }
+            }
+            draw() {
+                if (!this.exploded) {
+                    ctx.fillStyle = '#ff5c8a';
+                    ctx.fillRect(this.x, this.y, 3, 10);
+                } else {
+                    this.particles.forEach(p => {
+                        ctx.save();
+                        ctx.globalAlpha = Math.max(p.alpha, 0);
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(p.x, p.y, 3, 3);
+                        ctx.restore();
+                    });
+                }
+            }
+        }
+
+        let fireworks = [];
+        setInterval(() => { fireworks.push(new Firework()); }, 800);
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clears canvas transparently so the background image shows through
+            fireworks.forEach((fw, index) => {
+                fw.update(); fw.draw();
+                if (fw.exploded && fw.particles[0].alpha <= 0) fireworks.splice(index, 1);
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('bg-canvas');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class PawParticle {
+        constructor() {
+            this.reset();
+        }
+        
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = canvas.height + 50;
+            this.size = Math.random() * 14 + 18; // Paw size
+            this.speedY = Math.random() * 0.7 + 0.3; // Upward drift speed
+            this.speedX = (Math.random() - 0.5) * 0.4; // Slight horizontal drift
+            this.alpha = Math.random() * 0.45 + 0.3; // Soft opacity
+            this.rotation = (Math.random() - 0.5) * 0.5;
+            this.rotSpeed = (Math.random() - 0.5) * 0.008;
+        }
+
+        update() {
+            this.y -= this.speedY;
+            this.x += this.speedX + Math.sin(this.y * 0.015) * 0.3;
+            this.rotation += this.rotSpeed;
+            
+            if (this.y < -50) {
+                this.reset();
+                this.y = canvas.height + 50;
+            }
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.globalAlpha = this.alpha;
+            
+            // Richer pink fill with a clean subtle outline so it's super distinct
+            ctx.fillStyle = '#ff6b8b'; 
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 1.5;
+
+            // 1. Main central pad (bean shape)
+            ctx.beginPath();
+            ctx.ellipse(0, this.size * 0.25, this.size * 0.32, this.size * 0.25, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // 2. Four distinct toe pads arranged in a neat arc
+            const toeRadius = this.size * 0.12;
+            const toePositions = [
+                { x: -this.size * 0.33, y: -this.size * 0.10 }, // Left outer toe
+                { x: -this.size * 0.11, y: -this.size * 0.26 }, // Left inner toe
+                { x: this.size * 0.11, y: -this.size * 0.26 },  // Right inner toe
+                { x: this.size * 0.33, y: -this.size * 0.10 }   // Right outer toe
+            ];
+
+            toePositions.forEach(pos => {
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, toeRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            ctx.restore();
+        }
+    }
+
+    const paws = Array.from({ length: 20 }, () => new PawParticle());
+
+    function animatePaws() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        paws.forEach(paw => {
+            paw.update();
+            paw.draw();
+        });
+        requestAnimationFrame(animatePaws);
+    }
+    
+    animatePaws();
+});
+    </script>
+</body>
+</html>

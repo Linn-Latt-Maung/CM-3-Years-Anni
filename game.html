@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3 Years Anniversary - Cat Game</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Isolated Game Styles to prevent style.css conflicts */
+        .cat-game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 70px);
+            padding: 20px;
+        }
+        .cat-game-wrapper {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(255, 107, 139, 0.15);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            padding: 25px;
+            transform: none !important;
+            perspective: none !important;
+        }
+        .cat-game-title {
+            color: #ff6b8b;
+            font-size: 2rem;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .cat-game-instructions {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+        .cat-sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 38px);
+            grid-template-rows: repeat(9, 38px);
+            gap: 1px;
+            background-color: #ffb6c1;
+            border: 3px solid #ff5270;
+            margin: 0 auto 20px auto;
+            width: fit-content;
+            border-radius: 8px;
+            overflow: hidden;
+            transform: none !important;
+        }
+        .cat-sudoku-cell {
+            background-color: #fff8f9 !important;
+            border: none !important;
+            text-align: center !important;
+            font-size: 1.2rem !important;
+            font-weight: bold !important;
+            color: #333 !important;
+            outline: none !important;
+            cursor: pointer;
+            width: 38px;
+            height: 38px;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-sizing: border-box;
+            transform: none !important;
+            rotate: 0deg !important;
+            scale: 1 !important;
+            direction: ltr !important;
+            writing-mode: horizontal-tb !important;
+        }
+        .cat-sudoku-cell:focus, .cat-sudoku-cell.cat-selected {
+            background-color: #ffe6eb !important;
+        }
+        .cat-sudoku-cell.cat-initial {
+            background-color: #fff0f3 !important;
+            color: #ff6b8b !important;
+            font-weight: 800 !important;
+            cursor: not-allowed;
+        }
+        .cat-sudoku-cell.cat-error {
+            color: #ff4757 !important;
+            background-color: #ffe0e0 !important;
+        }
+        /* Fixed vertical lines for every 3rd and 6th column */
+        .cat-sudoku-cell:nth-child(9n+3), 
+        .cat-sudoku-cell:nth-child(9n+6) { 
+            border-right: 2px solid #ff5270 !important; 
+        }
+        /* Horizontal lines for 3rd and 6th rows */
+        .cat-sudoku-cell:nth-child(n+19):nth-child(-n+27),
+        .cat-sudoku-cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 2px solid #ff5270 !important;
+        }
+        .cat-number-pad {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .cat-num-btn, .cat-action-btn {
+            background-color: #ff758c;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(255, 117, 140, 0.3);
+            transition: transform 0.1s ease;
+            transform: none !important;
+        }
+        .cat-num-btn:active, .cat-action-btn:active {
+            transform: scale(0.95) !important;
+        }
+        .cat-actions-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .cat-action-btn {
+            background-color: #ffa8b6;
+        }
+        @media(max-width: 600px) {
+            .cat-sudoku-grid {
+                grid-template-columns: repeat(9, 32px);
+                grid-template-rows: repeat(9, 32px);
+            }
+            .cat-sudoku-cell {
+                width: 32px;
+                height: 32px;
+                font-size: 1rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        if (!localStorage.getItem('auth_success')) window.location.href = 'index.html';
+    </script>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="content-layer">
+        <nav class="navbar">
+            <div class="nav-brand">🐾 3 Years Together</div>
+<button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">
+    ☰
+  </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="home.html">Home</a></li>
+                <!-- <li><a href="speech.html">Anniversary Speech</a></li> -->
+                <li><a href="memories.html">Memories</a></li>
+                <li><a href="game.html" class="active">Game</a></li>
+                <li><a href="likes.html">Things I Loves</a></li>
+                <li><a href="guess.html">Guess Game</a></li>
+            </ul>
+        </nav>
+
+        <div class="cat-game-container">
+            <div class="cat-game-wrapper">
+                <h2 class="cat-game-title">Sweet Sudoku 🧩💖</h2>
+                <p class="cat-game-instructions">Fill in the grid so every row, column, and 3x3 box contains numbers 1-9!</p>
+                
+                <div class="cat-sudoku-grid" id="cat-sudoku-grid"></div>
+
+                <div class="cat-number-pad">
+                    <button class="cat-num-btn" onclick="inputNumber(1)">1</button>
+                    <button class="cat-num-btn" onclick="inputNumber(2)">2</button>
+                    <button class="cat-num-btn" onclick="inputNumber(3)">3</button>
+                    <button class="cat-num-btn" onclick="inputNumber(4)">4</button>
+                    <button class="cat-num-btn" onclick="inputNumber(5)">5</button>
+                    <button class="cat-num-btn" onclick="inputNumber(6)">6</button>
+                    <button class="cat-num-btn" onclick="inputNumber(7)">7</button>
+                    <button class="cat-num-btn" onclick="inputNumber(8)">8</button>
+                    <button class="cat-num-btn" onclick="inputNumber(9)">9</button>
+                    <button class="cat-num-btn" onclick="inputNumber(0)" style="background-color: #bbb;">Eraser</button>
+                </div>
+
+                <div class="cat-actions-container">
+                    <button class="cat-action-btn" onclick="checkSudoku()">Check Solution</button>
+                    <button class="cat-action-btn" onclick="newGame()">New Puzzle</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Paw background animation script from home.html
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('bg-canvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class PawParticle {
+                constructor() {
+                    this.reset();
+                }
+                
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = canvas.height + 50;
+                    this.size = Math.random() * 14 + 18;
+                    this.speedY = Math.random() * 0.7 + 0.3;
+                    this.speedX = (Math.random() - 0.5) * 0.4;
+                    this.alpha = Math.random() * 0.45 + 0.3;
+                    this.rotation = (Math.random() - 0.5) * 0.5;
+                    this.rotSpeed = (Math.random() - 0.5) * 0.008;
+                }
+
+                update() {
+                    this.y -= this.speedY;
+                    this.x += this.speedX + Math.sin(this.y * 0.015) * 0.3;
+                    this.rotation += this.rotSpeed;
+                    
+                    if (this.y < -50) {
+                        this.reset();
+                        this.y = canvas.height + 50;
+                    }
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.rotation);
+                    ctx.globalAlpha = this.alpha;
+                    
+                    ctx.fillStyle = '#ff6b8b'; 
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.lineWidth = 1.5;
+
+                    ctx.beginPath();
+                    ctx.ellipse(0, this.size * 0.25, this.size * 0.32, this.size * 0.25, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    const toeRadius = this.size * 0.12;
+                    const toePositions = [
+                        { x: -this.size * 0.33, y: -this.size * 0.10 },
+                        { x: -this.size * 0.11, y: -this.size * 0.26 },
+                        { x: this.size * 0.11, y: -this.size * 0.26 },
+                        { x: this.size * 0.33, y: -this.size * 0.10 }
+                    ];
+
+                    toePositions.forEach(pos => {
+                        ctx.beginPath();
+                        ctx.arc(pos.x, pos.y, toeRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    });
+
+                    ctx.restore();
+                }
+            }
+
+            const paws = Array.from({ length: 20 }, () => new PawParticle());
+
+            function animatePaws() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                paws.forEach(paw => {
+                    paw.update();
+                    paw.draw();
+                });
+                requestAnimationFrame(animatePaws);
+            }
+            
+            animatePaws();
+        });
+
+        // Sudoku Game Logic
+        const gamePool = [
+            {
+                puzzle: "530070000600195000098000060800060003400803001700020006060000280000419005000080079",
+                solution: "534678912672195348198342567859761423426853791713924856961537284287419635345286179"
+            },
+            {
+                puzzle: "004300209005009001070060043006002087190007400050083000600001050035086907000901500",
+                solution: "864371259325649871179265343216492587198537462453183796647921658532786914781954523"
+            }
+        ];
+
+        let solutionBoard = [];
+        let currentBoard = [];
+        let selectedCell = null;
+
+        const gridElement = document.getElementById('cat-sudoku-grid');
+
+        function initGrid() {
+            gridElement.innerHTML = '';
+            for (let i = 0; i < 81; i++) {
+                const cell = document.createElement('input');
+                cell.type = 'text';
+                cell.maxLength = 1;
+                cell.className = 'cat-sudoku-cell';
+                cell.dataset.index = i;
+
+                cell.addEventListener('click', () => {
+                    document.querySelectorAll('.cat-sudoku-cell').forEach(c => c.classList.remove('cat-selected'));
+                    if (!cell.classList.contains('cat-initial')) {
+                        cell.classList.add('cat-selected');
+                        selectedCell = cell;
+                    } else {
+                        selectedCell = null;
+                    }
+                });
+
+                cell.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    if (!/^[1-9]$/.test(val)) {
+                        e.target.value = '';
+                    } else {
+                        currentBoard[i] = parseInt(val);
+                        cell.classList.remove('cat-error');
+                    }
+                });
+
+                gridElement.appendChild(cell);
+            }
+        }
+
+        function loadRandomPuzzle() {
+            const game = gamePool[Math.floor(Math.random() * gamePool.length)];
+            solutionBoard = game.solution.split('').map(Number);
+            currentBoard = game.puzzle.split('').map(Number);
+
+            const cells = gridElement.children;
+            for (let i = 0; i < 81; i++) {
+                cells[i].value = currentBoard[i] !== 0 ? currentBoard[i] : '';
+                cells[i].classList.remove('cat-initial', 'cat-error', 'cat-selected');
+                if (currentBoard[i] !== 0) {
+                    cells[i].classList.add('cat-initial');
+                    cells[i].readOnly = true;
+                } else {
+                    cells[i].readOnly = false;
+                }
+            }
+            selectedCell = null;
+        }
+
+        function inputNumber(num) {
+            if (!selectedCell) return;
+            const idx = selectedCell.dataset.index;
+            if (num === 0) {
+                selectedCell.value = '';
+                currentBoard[idx] = 0;
+            } else {
+                selectedCell.value = num;
+                currentBoard[idx] = num;
+            }
+            selectedCell.classList.remove('cat-error');
+        }
+
+        function checkSudoku() {
+            const cells = gridElement.children;
+            let isComplete = true;
+            let hasError = false;
+
+            for (let i = 0; i < 81; i++) {
+                const val = parseInt(cells[i].value) || 0;
+                currentBoard[i] = val;
+                if (val === 0) {
+                    isComplete = false;
+                } else if (val !== solutionBoard[i]) {
+                    cells[i].classList.add('cat-error');
+                    hasError = true;
+                } else {
+                    cells[i].classList.remove('cat-error');
+                }
+            }
+
+            if (isComplete && !hasError) {
+                alert('🎉 Amazing job! You solved the Sudoku puzzle!');
+                loadRandomPuzzle();
+            } else if (hasError) {
+                alert('Oops! Some numbers are incorrect. Check the highlighted red cells.');
+            } else if (!isComplete) {
+                alert('Puzzle is not filled completely yet. Keep going!');
+            }
+        }
+
+        function newGame() {
+            loadRandomPuzzle();
+        }
+
+        initGrid();
+        loadRandomPuzzle();
+    </script>
+        <script>
+const menuToggle = document.getElementById('menuToggle');
+const navLinks = document.getElementById('navLinks');
+
+// Only run this code if both elements actually exist on the current page
+if (menuToggle && navLinks) {
+  // Toggle the mobile menu on click
+  menuToggle.addEventListener('click', () => {
+    navLinks.classList.toggle('active');
+  });
+
+  // Automatically close the menu when a link is clicked on mobile
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => {
+      navLinks.classList.remove('active');
+    });
+  });
+}
+    </script>
+</body>
+</html>

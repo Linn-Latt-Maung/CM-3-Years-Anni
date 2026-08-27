@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess Her Likes Game</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .quiz-card {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: var(--dark-grey);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-dark);
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.3s;
+        }
+        .option-btn:hover {
+            background: rgba(255, 117, 140, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <script>if (!localStorage.getItem('auth_success')) window.location.href = 'index.html';</script>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="content-layer">
+        <nav class="navbar">
+            <div class="nav-brand">🐾 3 Years Together</div>
+<button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">
+    ☰
+  </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="home.html">Home</a></li>
+                <!-- <li><a href="speech.html">Anniversary Speech</a></li> -->
+                <li><a href="memories.html">Memories</a></li>
+                <li><a href="game.html">Game</a></li>
+                <li><a href="likes.html">Things I Loves</a></li>
+                <li><a href="guess.html" class="active">Guess Game</a></li>
+            </ul>
+        </nav>
+
+        <div class="container">
+            <div class="card quiz-card">
+                <div id="quiz-area">
+                    <h2 id="question-title" style="color: var(--primary-pink); margin-bottom: 15px;">Question 1/10</h2>
+                    <p id="question-text" style="font-size: 1.1rem; margin-bottom: 20px;"></p>
+                    <div id="options-container"></div>
+                </div>
+                <div id="result-area" style="display: none; text-align: center;">
+                    <h2 style="color: var(--primary-pink);">Quiz Completed! 🎉</h2>
+                    <p id="summary-text" style="margin: 20px 0; font-size: 1.1rem;"></p>
+                    <button class="btn" onclick="restartQuiz()">Play Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const navLinks = document.getElementById('nav-links');
+            if (menuBtn && navLinks) {
+                menuBtn.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                });
+                navLinks.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        navLinks.classList.remove('active');
+                    });
+                });
+            }
+        });
+
+        const questions = [
+            { q: "What is her absolute favorite color?", options: ["Pink", "Brown", "Blue", "Black"], correct: 1 },
+            { q: "What is her favorite drink?", options: ["Bubble Tea", "Coffee", "Matcha", "Lemonade"], correct: 1 },
+            { q: "Which season does she love the most?", options: ["Winter", "Summer", "Autumn", "Spring"], correct: 0 },
+            { q: "What kind of movie genre is her favorite?", options: ["Horror", "Action", "Romance / Slice of Life", "Sci-Fi"], correct: 1 },
+            { q: "What is her ideal weekend plan?", options: ["Going to a crowded party", "Staying cozy indoors", "Hiking outdoors", "Shopping all day"], correct: 3 },
+            { q: "What snack does she crave late at night?", options: ["Chocolate", "Chips", "Ice cream", "Fruit"], correct: 2 },
+            { q: "What is her favorite animal?", options: ["Dogs", "Cats", "Pandas", "Rabbits"], correct: 1 },
+            { q: "How does she prefer her coffee/tea?", options: ["Very Sweet", "No sugar", "Medium sweet", "Bitter"], correct: 2 },
+            { q: "What is her go-to hobby?", options: ["Drawing/Sketching", "Gaming", "Dancing", "Cooking"], correct: 2 },
+            { q: "Which pet name does she find cutest?", options: ["Milo", "Luna", "Mochi", "Simba"], correct: 2 }
+        ];
+
+        let currentQ = 0;
+        let wrongAnswers = 0;
+
+        function loadQuestion() {
+            if (currentQ >= questions.length) {
+                showResults();
+                return;
+            }
+            const q = questions[currentQ];
+            document.getElementById('question-title').innerText = `Question ${currentQ + 1} / 10`;
+            document.getElementById('question-text').innerText = q.q;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(idx, q.correct);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct) {
+            if (selected !== correct) {
+                wrongAnswers++;
+            }
+            currentQ++;
+            loadQuestion();
+        }
+
+        function showResults() {
+            document.getElementById('quiz-area').style.display = 'none';
+            document.getElementById('result-area').style.display = 'block';
+            
+            const presentsOwed = Math.floor(wrongAnswers / 2);
+            document.getElementById('summary-text').innerText = `You got ${wrongAnswers} questions wrong! Because of this, you owe her 🎁 ${presentsOwed} present(s)!`;
+        }
+
+        function restartQuiz() {
+            currentQ = 0;
+            wrongAnswers = 0;
+            document.getElementById('quiz-area').style.display = 'block';
+            document.getElementById('result-area').style.display = 'none';
+            loadQuestion();
+        }
+
+        loadQuestion();
+
+        document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('bg-canvas');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class PawParticle {
+        constructor() {
+            this.reset();
+        }
+        
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = canvas.height + 50;
+            this.size = Math.random() * 14 + 18; // Paw size
+            this.speedY = Math.random() * 0.7 + 0.3; // Upward drift speed
+            this.speedX = (Math.random() - 0.5) * 0.4; // Slight horizontal drift
+            this.alpha = Math.random() * 0.45 + 0.3; // Soft opacity
+            this.rotation = (Math.random() - 0.5) * 0.5;
+            this.rotSpeed = (Math.random() - 0.5) * 0.008;
+        }
+
+        update() {
+            this.y -= this.speedY;
+            this.x += this.speedX + Math.sin(this.y * 0.015) * 0.3;
+            this.rotation += this.rotSpeed;
+            
+            if (this.y < -50) {
+                this.reset();
+                this.y = canvas.height + 50;
+            }
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.globalAlpha = this.alpha;
+            
+            // Richer pink fill with a clean subtle outline so it's super distinct
+            ctx.fillStyle = '#ff6b8b'; 
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 1.5;
+
+            // 1. Main central pad (bean shape)
+            ctx.beginPath();
+            ctx.ellipse(0, this.size * 0.25, this.size * 0.32, this.size * 0.25, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // 2. Four distinct toe pads arranged in a neat arc
+            const toeRadius = this.size * 0.12;
+            const toePositions = [
+                { x: -this.size * 0.33, y: -this.size * 0.10 }, // Left outer toe
+                { x: -this.size * 0.11, y: -this.size * 0.26 }, // Left inner toe
+                { x: this.size * 0.11, y: -this.size * 0.26 },  // Right inner toe
+                { x: this.size * 0.33, y: -this.size * 0.10 }   // Right outer toe
+            ];
+
+            toePositions.forEach(pos => {
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, toeRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            ctx.restore();
+        }
+    }
+
+    const paws = Array.from({ length: 20 }, () => new PawParticle());
+
+    function animatePaws() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        paws.forEach(paw => {
+            paw.update();
+            paw.draw();
+        });
+        requestAnimationFrame(animatePaws);
+    }
+    
+    animatePaws();
+});
+    </script>
+        <script>
+const menuToggle = document.getElementById('menuToggle');
+const navLinks = document.getElementById('navLinks');
+
+// Only run this code if both elements actually exist on the current page
+if (menuToggle && navLinks) {
+  // Toggle the mobile menu on click
+  menuToggle.addEventListener('click', () => {
+    navLinks.classList.toggle('active');
+  });
+
+  // Automatically close the menu when a link is clicked on mobile
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => {
+      navLinks.classList.remove('active');
+    });
+  });
+}
+    </script>
+</body>
+</html>
